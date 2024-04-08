@@ -1,20 +1,26 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 
 SDL_Window *window;
 SDL_Renderer *renderer;
-
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
+const float PLAYER_SIZE = 25.0f;
+Uint64 ticksElapsed;
 int isRunning = SDL_TRUE;
 typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
 // game state
-SDL_Rect player = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 100, 100};
+SDL_FRect player = {SCREEN_WIDTH - PLAYER_SIZE, SCREEN_HEIGHT - PLAYER_SIZE,
+                    PLAYER_SIZE, PLAYER_SIZE};
+SDL_FRect food = {0, 0, PLAYER_SIZE, PLAYER_SIZE};
 Direction currDirection = LEFT;
+const float MOVE_SPEED = 0.20f;
 
 void processInput() {
   SDL_Event event;
@@ -44,29 +50,42 @@ void processInput() {
 }
 
 void render() {
+  // clear frame buffer
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
-  SDL_SetRenderDrawColor(renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
-  SDL_RenderFillRect(renderer, &player);
+  // draw player
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+  SDL_RenderFillRectF(renderer, &player);
+  // draw food
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+  SDL_RenderFillRectF(renderer, &food);
+  // present buffer
   SDL_RenderPresent(renderer);
 };
 
-// TODO: implement deltatime
-void update() {
+void update(Uint64 deltaTime) {
   switch (currDirection) {
   case UP:
-    player.y--;
+    player.y -= MOVE_SPEED * deltaTime;
     break;
   case DOWN:
-    player.y++;
+    player.y += MOVE_SPEED * deltaTime;
     break;
   case LEFT:
-    player.x--;
+    player.x -= MOVE_SPEED * deltaTime;
     break;
   case RIGHT:
-    player.x++;
+    player.x += MOVE_SPEED * deltaTime;
+    break;
+  default:
+    // do nothing
     break;
   }
+
+  // TODO: replace with SDL_HasIntersectionF
+  if (SDL_HasIntersectionF(&player, &food)) {
+    SDL_Log("food and player are intersecting uwu\n");
+  };
 };
 
 int main(int argc, char **arv) {
@@ -78,8 +97,13 @@ int main(int argc, char **arv) {
 
   // draw a rect
   while (isRunning) {
+    // get deltatime
+    Uint64 currTicks = SDL_GetTicks64();
+    Uint64 deltaTime = currTicks - ticksElapsed;
+    ticksElapsed = SDL_GetTicks64();
+
     processInput();
-    update();
+    update(deltaTime);
     render();
   };
 
