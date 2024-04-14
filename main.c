@@ -1,26 +1,48 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_log.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
+#include <stdlib.h>
 
 SDL_Window *window;
 SDL_Renderer *renderer;
-const int SCREEN_WIDTH = 800;
+const int SCREEN_WIDTH = 600;
 const int SCREEN_HEIGHT = 600;
-const float PLAYER_SIZE = 25.0f;
+const int PLAYER_SIZE = 25;
 Uint64 ticksElapsed;
 int isRunning = SDL_TRUE;
 typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
 // game state
-SDL_FRect player = {SCREEN_WIDTH - PLAYER_SIZE, SCREEN_HEIGHT - PLAYER_SIZE,
-                    PLAYER_SIZE, PLAYER_SIZE};
-SDL_FRect food = {0, 0, PLAYER_SIZE, PLAYER_SIZE};
+typedef struct Segment {
+  SDL_Rect head;        // 16 bytes
+  struct Segment *next; // 8 bytes
+} Segment;
+
+SDL_Rect init_head = {SCREEN_WIDTH - PLAYER_SIZE, SCREEN_HEIGHT - PLAYER_SIZE,
+                      PLAYER_SIZE, PLAYER_SIZE};
+SDL_Rect testing_seg = {SCREEN_WIDTH, SCREEN_HEIGHT - PLAYER_SIZE, PLAYER_SIZE,
+                        PLAYER_SIZE};
+Segment *snake;
+
+SDL_Rect food = {0, 0, PLAYER_SIZE, PLAYER_SIZE};
 Direction currDirection = LEFT;
-const float MOVE_SPEED = 0.20f;
+const int MOVE_SPEED = PLAYER_SIZE;
+
+// void eatFood() {
+//   // In Player:
+//   // head gets a new SDL_Rect
+//   // tail becomes old head
+//   SDL_Rect old_head = snake->head;
+//   while (snake->next == NULL) {
+//     snake->next = malloc(sizeof(Segment));
+//     snake->next->head = old_head;
+//   }
+// };
 
 void processInput() {
   SDL_Event event;
@@ -49,42 +71,46 @@ void processInput() {
   };
 }
 
+// render the player and the food
 void render() {
-  // clear frame buffer
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
-  // draw player
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-  SDL_RenderFillRectF(renderer, &player);
-  // draw food
+  Segment *currSeg = snake;
+  SDL_RenderFillRect(renderer, &snake->head);
+  while (currSeg != NULL) {
+    SDL_RenderFillRect(renderer, &currSeg->head);
+    currSeg = currSeg->next;
+  };
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-  SDL_RenderFillRectF(renderer, &food);
-  // present buffer
+  SDL_RenderFillRect(renderer, &food);
   SDL_RenderPresent(renderer);
 };
 
 void update(Uint64 deltaTime) {
   switch (currDirection) {
   case UP:
-    player.y -= MOVE_SPEED * deltaTime;
+    snake->head.y -= MOVE_SPEED;
     break;
   case DOWN:
-    player.y += MOVE_SPEED * deltaTime;
+    snake->head.y += MOVE_SPEED;
     break;
   case LEFT:
-    player.x -= MOVE_SPEED * deltaTime;
+    snake->next->head.x = snake->head.x;
+    snake->head.x -= MOVE_SPEED;
     break;
   case RIGHT:
-    player.x += MOVE_SPEED * deltaTime;
+    snake->head.x += MOVE_SPEED;
     break;
   default:
     // do nothing
     break;
   }
 
-  // TODO: replace with SDL_HasIntersectionF
-  if (SDL_HasIntersectionF(&player, &food)) {
-    SDL_Log("food and player are intersecting uwu\n");
+  // TODO: don't think i need to worry about body collisions?
+  if (SDL_HasIntersection(&snake->head, &food)) {
+    SDL_Log("food and player are intersecting\n");
+    // eatFood();
   };
 };
 
@@ -95,9 +121,13 @@ int main(int argc, char **arv) {
   renderer = SDL_CreateRenderer(
       window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 
-  // draw a rect
+  // initialize player
+  snake = malloc(sizeof(Segment));
+  snake->head = init_head;
+  snake->next = malloc(sizeof(Segment));
+  snake->next->head = testing_seg;
+
   while (isRunning) {
-    // get deltatime
     Uint64 currTicks = SDL_GetTicks64();
     Uint64 deltaTime = currTicks - ticksElapsed;
     ticksElapsed = SDL_GetTicks64();
@@ -105,6 +135,11 @@ int main(int argc, char **arv) {
     processInput();
     update(deltaTime);
     render();
+
+    SDL_Delay(1000 / 2);
+
+    SDL_Log("%d\n", snake->head.x);
+    SDL_Log("%d\n", snake->next->head.x);
   };
 
   SDL_DestroyRenderer(renderer);
