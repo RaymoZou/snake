@@ -106,7 +106,7 @@ void render() {
 // TODO: fix game update
 void update(Uint64 deltaTime) {
   Segment *curr = snake;
-  SDL_Rect buffer = *snake->rect;
+  SDL_Rect prev_rect = *snake->rect;
   switch (currDirection) {
   case UP:
     snake->rect->y -= PLAYER_SIZE;
@@ -121,14 +121,16 @@ void update(Uint64 deltaTime) {
     snake->rect->x += PLAYER_SIZE;
     break;
   default:
-    // do nothing
     break;
   }
 
   while (curr->next) {
-    *curr->rect = buffer;
     curr = curr->next;
+    *curr->rect = prev_rect;
   };
+
+  SDL_Log("original: %d\n", snake->rect->x);
+  SDL_Log("buffer (modified) : %d\n", prev_rect.x);
 
   // TODO: don't think i need to worry about body collisions?
   if (SDL_HasIntersection(snake->rect, &food)) {
@@ -160,7 +162,6 @@ int main(int argc, char **arv) {
   snake->rect = malloc(sizeof(SDL_Rect));
   snake->rect = &init_head;
   snake->next = malloc(sizeof(Segment));
-
 
   // segment 2
   snake->next->rect = malloc(sizeof(SDL_Rect));
