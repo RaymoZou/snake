@@ -19,7 +19,7 @@ typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
 // game state
 typedef struct Segment {
-  SDL_Rect head;        // 16 bytes
+  SDL_Rect *rect;       // 16 bytes
   struct Segment *next; // 8 bytes
 } Segment;
 
@@ -27,22 +27,38 @@ SDL_Rect init_head = {SCREEN_WIDTH - PLAYER_SIZE, SCREEN_HEIGHT - PLAYER_SIZE,
                       PLAYER_SIZE, PLAYER_SIZE};
 SDL_Rect testing_seg = {SCREEN_WIDTH, SCREEN_HEIGHT - PLAYER_SIZE, PLAYER_SIZE,
                         PLAYER_SIZE};
+SDL_Rect food = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, PLAYER_SIZE, PLAYER_SIZE};
+
 Segment *snake;
 
-SDL_Rect food = {0, 0, PLAYER_SIZE, PLAYER_SIZE};
 Direction currDirection = LEFT;
-const int MOVE_SPEED = PLAYER_SIZE;
 
-// void eatFood() {
-//   // In Player:
-//   // head gets a new SDL_Rect
-//   // tail becomes old head
-//   SDL_Rect old_head = snake->head;
-//   while (snake->next == NULL) {
-//     snake->next = malloc(sizeof(Segment));
-//     snake->next->head = old_head;
-//   }
-// };
+// problem: the food and head are on top of eachother
+void eatFood() {
+  SDL_Log("eating food");
+  Segment *new_seg = malloc(sizeof(Segment));
+  SDL_Rect new_head = food;
+  switch (currDirection) {
+  case UP:
+    new_head.x -= PLAYER_SIZE;
+    break;
+  case DOWN:
+    new_head.y += PLAYER_SIZE;
+    break;
+  case LEFT:
+    new_head.x -= PLAYER_SIZE;
+    break;
+  case RIGHT:
+    new_head.x += PLAYER_SIZE;
+    break;
+  default:
+    break;
+  };
+  new_seg->rect = malloc(sizeof(SDL_Rect));
+  // TODO: copy the value in &new_head -> new_set->rect
+  new_seg->next = snake->next;
+  snake->next = new_seg;
+};
 
 void processInput() {
   SDL_Event event;
@@ -76,42 +92,60 @@ void render() {
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-  Segment *currSeg = snake;
-  SDL_RenderFillRect(renderer, &snake->head);
-  while (currSeg != NULL) {
-    SDL_RenderFillRect(renderer, &currSeg->head);
-    currSeg = currSeg->next;
-  };
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+  SDL_RenderFillRect(renderer, snake->rect);
+  SDL_RenderFillRect(renderer, snake->next->rect);
+  // Segment *curr_seg = snake;
+  // // while (curr_seg) {
+  // //   SDL_RenderFillRect(renderer, curr_seg->rect);
+  // //   curr_seg = curr_seg->next;
+  // // }
   SDL_RenderFillRect(renderer, &food);
   SDL_RenderPresent(renderer);
 };
 
+// TODO: fix game update
 void update(Uint64 deltaTime) {
+  Segment *curr = snake;
+  SDL_Rect buffer = *snake->rect;
   switch (currDirection) {
   case UP:
-    snake->head.y -= MOVE_SPEED;
+    snake->rect->y -= PLAYER_SIZE;
     break;
   case DOWN:
-    snake->head.y += MOVE_SPEED;
+    snake->rect->y += PLAYER_SIZE;
     break;
   case LEFT:
-    snake->next->head.x = snake->head.x;
-    snake->head.x -= MOVE_SPEED;
+    snake->rect->x -= PLAYER_SIZE;
     break;
   case RIGHT:
-    snake->head.x += MOVE_SPEED;
+    snake->rect->x += PLAYER_SIZE;
     break;
   default:
     // do nothing
     break;
   }
 
-  // TODO: don't think i need to worry about body collisions?
-  if (SDL_HasIntersection(&snake->head, &food)) {
-    SDL_Log("food and player are intersecting\n");
-    // eatFood();
+  while (curr->next) {
+    *curr->rect = buffer;
+    curr = curr->next;
   };
+
+  // TODO: don't think i need to worry about body collisions?
+  if (SDL_HasIntersection(snake->rect, &food)) {
+    eatFood();
+  };
+};
+
+int getSnakeLength() {
+  int count = 0;
+  Segment *curr = snake;
+  while (curr) {
+    SDL_Log("Segment %d x: %d", count, curr->rect->x);
+    SDL_Log("Segment %d y: %d", count, curr->rect->y);
+    count++;
+    curr = curr->next;
+  };
+  return count;
 };
 
 int main(int argc, char **arv) {
@@ -121,13 +155,23 @@ int main(int argc, char **arv) {
   renderer = SDL_CreateRenderer(
       window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 
-  // initialize player
+  // segment 1
   snake = malloc(sizeof(Segment));
-  snake->head = init_head;
+  snake->rect = malloc(sizeof(SDL_Rect));
+  snake->rect = &init_head;
   snake->next = malloc(sizeof(Segment));
-  snake->next->head = testing_seg;
+
+
+  // segment 2
+  snake->next->rect = malloc(sizeof(SDL_Rect));
+  snake->next->rect = &testing_seg;
+  snake->next->next = NULL;
+
+  SDL_Log("1: %d", snake->rect->x);
+  SDL_Log("2: %d", snake->next->rect->x);
 
   while (isRunning) {
+    // TODO: don't really need delta time if using fixed framerate
     Uint64 currTicks = SDL_GetTicks64();
     Uint64 deltaTime = currTicks - ticksElapsed;
     ticksElapsed = SDL_GetTicks64();
@@ -136,10 +180,11 @@ int main(int argc, char **arv) {
     update(deltaTime);
     render();
 
-    SDL_Delay(1000 / 2);
+    SDL_Delay(1000 / 4);
 
-    SDL_Log("%d\n", snake->head.x);
-    SDL_Log("%d\n", snake->next->head.x);
+    SDL_Log("%d\n", snake->rect->x);
+    SDL_Log("%d\n", snake->next->rect->x);
+    // SDL_Log("snake length: %d\n", getSnakeLength());
   };
 
   SDL_DestroyRenderer(renderer);
