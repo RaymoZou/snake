@@ -126,7 +126,9 @@ void update(Uint64 deltaTime) {
 
   while (curr->next) {
     curr = curr->next;
+    SDL_Rect temp = *curr->rect;
     *curr->rect = prev_rect;
+    prev_rect = temp;
   };
 
   SDL_Log("original: %d\n", snake->rect->x);
