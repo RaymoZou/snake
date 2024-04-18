@@ -106,7 +106,7 @@ void render() {
 };
 
 // TODO: fix game update
-void update(Uint64 deltaTime) {
+void update() {
   Segment *curr = snake;
   SDL_Rect prev_rect = *snake->rect;
   switch (currDirection) {
@@ -166,16 +166,11 @@ int main(int argc, char **arv) {
   snake->next = NULL;
 
   while (isRunning) {
-    // TODO: don't really need delta time if using fixed framerate
-    Uint64 currTicks = SDL_GetTicks64();
-    Uint64 deltaTime = currTicks - ticksElapsed;
-    ticksElapsed = SDL_GetTicks64();
-
     processInput();
-    update(deltaTime);
+    update();
     render();
 
-    SDL_Delay(1000 / 4);
+    SDL_Delay(1000 / 8);
 
     getSnakeLength();
   };
