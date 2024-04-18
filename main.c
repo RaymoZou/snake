@@ -151,9 +151,11 @@ int getSnakeLength() {
 };
 
 int main(int argc, char **arv) {
+
   SDL_Init(SDL_INIT_EVERYTHING);
-  window =
-      SDL_CreateWindow("Snake Game", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+  window = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED_DISPLAY(0),
+                            SDL_WINDOWPOS_CENTERED_DISPLAY(0), SCREEN_WIDTH,
+                            SCREEN_HEIGHT, 0);
   renderer = SDL_CreateRenderer(
       window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 
