@@ -17,6 +17,11 @@ Uint64 ticksElapsed;
 int isRunning = SDL_TRUE;
 typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
+// TODO: add boundaries to edges
+// TODO: game restart on collision
+// TODO: reset the food to new unoccupied position when collected
+// TODO: score UI
+
 // game state
 typedef struct Segment {
   SDL_Rect *rect;       // 16 bytes
@@ -55,7 +60,6 @@ void eatFood() {
     break;
   };
   new_seg->rect = malloc(sizeof(SDL_Rect));
-  // TODO: copy the value in &new_head -> new_set->rect
   new_seg->next = snake->next;
   snake->next = new_seg;
 };
@@ -92,13 +96,11 @@ void render() {
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-  SDL_RenderFillRect(renderer, snake->rect);
-  SDL_RenderFillRect(renderer, snake->next->rect);
-  // Segment *curr_seg = snake;
-  // // while (curr_seg) {
-  // //   SDL_RenderFillRect(renderer, curr_seg->rect);
-  // //   curr_seg = curr_seg->next;
-  // // }
+  Segment *curr_seg = snake;
+  while (curr_seg) {
+    SDL_RenderFillRect(renderer, curr_seg->rect);
+    curr_seg = curr_seg->next;
+  }
   SDL_RenderFillRect(renderer, &food);
   SDL_RenderPresent(renderer);
 };
@@ -131,9 +133,6 @@ void update(Uint64 deltaTime) {
     prev_rect = temp;
   };
 
-  SDL_Log("original: %d\n", snake->rect->x);
-  SDL_Log("buffer (modified) : %d\n", prev_rect.x);
-
   // TODO: don't think i need to worry about body collisions?
   if (SDL_HasIntersection(snake->rect, &food)) {
     eatFood();
@@ -144,8 +143,7 @@ int getSnakeLength() {
   int count = 0;
   Segment *curr = snake;
   while (curr) {
-    SDL_Log("Segment %d x: %d", count, curr->rect->x);
-    SDL_Log("Segment %d y: %d", count, curr->rect->y);
+    SDL_Log("Segment %d x: %d, y: %d\n", count, curr->rect->x, curr->rect->y);
     count++;
     curr = curr->next;
   };
@@ -163,15 +161,7 @@ int main(int argc, char **arv) {
   snake = malloc(sizeof(Segment));
   snake->rect = malloc(sizeof(SDL_Rect));
   snake->rect = &init_head;
-  snake->next = malloc(sizeof(Segment));
-
-  // segment 2
-  snake->next->rect = malloc(sizeof(SDL_Rect));
-  snake->next->rect = &testing_seg;
-  snake->next->next = NULL;
-
-  SDL_Log("1: %d", snake->rect->x);
-  SDL_Log("2: %d", snake->next->rect->x);
+  snake->next = NULL;
 
   while (isRunning) {
     // TODO: don't really need delta time if using fixed framerate
@@ -185,9 +175,7 @@ int main(int argc, char **arv) {
 
     SDL_Delay(1000 / 4);
 
-    SDL_Log("%d\n", snake->rect->x);
-    SDL_Log("%d\n", snake->next->rect->x);
-    // SDL_Log("snake length: %d\n", getSnakeLength());
+    getSnakeLength();
   };
 
   SDL_DestroyRenderer(renderer);
