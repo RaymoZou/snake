@@ -17,26 +17,25 @@ Uint64 ticksElapsed;
 int isRunning = SDL_TRUE;
 typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
-// TODO: add boundaries to edges
 // TODO: game restart on collision
-// TODO: reset the food to new unoccupied position when collected
-// TODO: score UI
+// TODO: score UI using SDL_ttf
 
 // game state
 typedef struct Segment {
-  SDL_Rect *rect;       // 16 bytes
-  struct Segment *next; // 8 bytes
+  SDL_Rect *rect;
+  struct Segment *next;
 } Segment;
 
 SDL_Rect init_head = {SCREEN_WIDTH - PLAYER_SIZE, SCREEN_HEIGHT - PLAYER_SIZE,
                       PLAYER_SIZE, PLAYER_SIZE};
-SDL_Rect testing_seg = {SCREEN_WIDTH, SCREEN_HEIGHT - PLAYER_SIZE, PLAYER_SIZE,
-                        PLAYER_SIZE};
-SDL_Rect food = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, PLAYER_SIZE, PLAYER_SIZE};
 
+// TODO: reset the food to new unoccupied, random position when collected
+SDL_Rect food = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, PLAYER_SIZE, PLAYER_SIZE};
 Segment *snake;
 
 Direction currDirection = LEFT;
+
+void restart() { SDL_Log("restarting game...\n"); };
 
 // problem: the food and head are on top of eachother
 void eatFood() {
@@ -105,7 +104,7 @@ void render() {
   SDL_RenderPresent(renderer);
 };
 
-// TODO: fix game update
+// TODO: check for body collisions b/w head and body
 void update() {
   Segment *curr = snake;
   SDL_Rect prev_rect = *snake->rect;
@@ -125,6 +124,14 @@ void update() {
   default:
     break;
   }
+
+  // check for edge collisions
+  if (snake->rect->x<0 | snake->rect->x> SCREEN_WIDTH) {
+    restart();
+  };
+  if (snake->rect->y<0 | snake->rect->y> SCREEN_HEIGHT) {
+    restart();
+  };
 
   while (curr->next) {
     curr = curr->next;
