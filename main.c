@@ -22,7 +22,7 @@ typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
 // game state
 typedef struct Segment {
-  SDL_Rect *rect;
+  SDL_Rect rect;
   struct Segment *next;
 } Segment;
 
@@ -58,7 +58,6 @@ void eatFood() {
   default:
     break;
   };
-  new_seg->rect = malloc(sizeof(SDL_Rect));
   new_seg->next = snake->next;
   snake->next = new_seg;
 };
@@ -97,7 +96,7 @@ void render() {
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
   Segment *curr_seg = snake;
   while (curr_seg) {
-    SDL_RenderFillRect(renderer, curr_seg->rect);
+    SDL_RenderFillRect(renderer, &curr_seg->rect);
     curr_seg = curr_seg->next;
   }
   SDL_RenderFillRect(renderer, &food);
@@ -107,41 +106,41 @@ void render() {
 // TODO: check for body collisions b/w head and body
 void update() {
   Segment *curr = snake;
-  SDL_Rect prev_rect = *snake->rect;
+  SDL_Rect prev_rect = snake->rect;
   switch (currDirection) {
   case UP:
-    snake->rect->y -= PLAYER_SIZE;
+    snake->rect.y -= PLAYER_SIZE;
     break;
   case DOWN:
-    snake->rect->y += PLAYER_SIZE;
+    snake->rect.y += PLAYER_SIZE;
     break;
   case LEFT:
-    snake->rect->x -= PLAYER_SIZE;
+    snake->rect.x -= PLAYER_SIZE;
     break;
   case RIGHT:
-    snake->rect->x += PLAYER_SIZE;
+    snake->rect.x += PLAYER_SIZE;
     break;
   default:
     break;
   }
 
   // check for edge collisions
-  if (snake->rect->x<0 | snake->rect->x> SCREEN_WIDTH) {
+  if (snake->rect.x<0 | snake->rect.x> SCREEN_WIDTH) {
     restart();
   };
-  if (snake->rect->y<0 | snake->rect->y> SCREEN_HEIGHT) {
+  if (snake->rect.y<0 | snake->rect.y> SCREEN_HEIGHT) {
     restart();
   };
 
   while (curr->next) {
     curr = curr->next;
-    SDL_Rect temp = *curr->rect;
-    *curr->rect = prev_rect;
+    SDL_Rect temp = curr->rect;
+    curr->rect = prev_rect;
     prev_rect = temp;
   };
 
   // TODO: don't think i need to worry about body collisions?
-  if (SDL_HasIntersection(snake->rect, &food)) {
+  if (SDL_HasIntersection(&snake->rect, &food)) {
     eatFood();
   };
 };
@@ -150,7 +149,7 @@ int getSnakeLength() {
   int count = 0;
   Segment *curr = snake;
   while (curr) {
-    SDL_Log("Segment %d x: %d, y: %d\n", count, curr->rect->x, curr->rect->y);
+    SDL_Log("Segment %d x: %d, y: %d\n", count, curr->rect.x, curr->rect.y);
     count++;
     curr = curr->next;
   };
@@ -168,8 +167,7 @@ int main(int argc, char **arv) {
 
   // segment 1
   snake = malloc(sizeof(Segment));
-  snake->rect = malloc(sizeof(SDL_Rect));
-  snake->rect = &init_head;
+  snake->rect = init_head;
   snake->next = NULL;
 
   while (isRunning) {
