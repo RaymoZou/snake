@@ -35,7 +35,16 @@ Segment *snake;
 
 Direction currDirection = LEFT;
 
-void restart() { SDL_Log("restarting game...\n"); };
+void restart() { 
+    SDL_Log("restarting game...\n");
+    // Segment *head = snake;
+    // Segment *temp;
+    // while (head) {
+    //     temp = head;
+    //     head = head->next;
+    //     free(temp);
+    // };
+};
 
 // problem: the food and head are on top of eachother
 void eatFood() {
@@ -125,10 +134,10 @@ void update() {
   }
 
   // check for edge collisions
-  if (snake->rect.x<0 | snake->rect.x> SCREEN_WIDTH) {
+  if (snake->rect.x<0 | snake->rect.x>= SCREEN_WIDTH) {
     restart();
   };
-  if (snake->rect.y<0 | snake->rect.y> SCREEN_HEIGHT) {
+  if (snake->rect.y<0 | snake->rect.y>= SCREEN_HEIGHT) {
     restart();
   };
 
