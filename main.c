@@ -35,15 +35,19 @@ Segment *snake;
 
 Direction currDirection = LEFT;
 
-void restart() { 
-    SDL_Log("restarting game...\n");
-    // Segment *head = snake;
-    // Segment *temp;
-    // while (head) {
-    //     temp = head;
-    //     head = head->next;
-    //     free(temp);
-    // };
+// TODO: figure out why game doesn't reset when snake length > 2
+void restart() {
+  SDL_Log("restarting game...\n");
+  Segment *temp;
+  while (snake) {
+    temp = snake;
+    snake = snake->next;
+    free(temp);
+    temp = NULL;
+  };
+  snake = malloc(sizeof(Segment));
+  snake->rect = init_head;
+  snake->next = NULL;
 };
 
 // problem: the food and head are on top of eachother
@@ -134,10 +138,10 @@ void update() {
   }
 
   // check for edge collisions
-  if (snake->rect.x<0 | snake->rect.x>= SCREEN_WIDTH) {
+  if (snake->rect.x < 0 | snake->rect.x >= SCREEN_WIDTH) {
     restart();
   };
-  if (snake->rect.y<0 | snake->rect.y>= SCREEN_HEIGHT) {
+  if (snake->rect.y < 0 | snake->rect.y >= SCREEN_HEIGHT) {
     restart();
   };
 
