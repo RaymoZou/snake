@@ -13,12 +13,13 @@ SDL_Renderer *renderer;
 const int SCREEN_WIDTH = 600;
 const int SCREEN_HEIGHT = 600;
 const int PLAYER_SIZE = 25;
-Uint64 ticksElapsed;
 int isRunning = SDL_TRUE;
 typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
 // TODO: game restart on collision
 // TODO: score UI using SDL_ttf
+// TODO: reset the food to new unoccupied, random position when collected
+// TODO: figure out why game doesn't reset when snake length > 2
 
 // game state
 typedef struct Segment {
@@ -26,16 +27,11 @@ typedef struct Segment {
   struct Segment *next;
 } Segment;
 
-SDL_Rect init_head = {SCREEN_WIDTH - PLAYER_SIZE, SCREEN_HEIGHT - PLAYER_SIZE,
-                      PLAYER_SIZE, PLAYER_SIZE};
-
-// TODO: reset the food to new unoccupied, random position when collected
-SDL_Rect food = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, PLAYER_SIZE, PLAYER_SIZE};
+SDL_Rect food;
 Segment *snake;
 
 Direction currDirection = LEFT;
 
-// TODO: figure out why game doesn't reset when snake length > 2
 void restart() {
   SDL_Log("restarting game...\n");
   Segment *temp;
@@ -43,10 +39,13 @@ void restart() {
     temp = snake;
     snake = snake->next;
     free(temp);
-    temp = NULL;
   };
   snake = malloc(sizeof(Segment));
-  snake->rect = init_head;
+  snake->rect.x = SCREEN_WIDTH - PLAYER_SIZE;
+  snake->rect.y = SCREEN_HEIGHT - PLAYER_SIZE;
+  snake->rect.w = PLAYER_SIZE;
+  snake->rect.h = PLAYER_SIZE;
+  snake->next = NULL;
   snake->next = NULL;
 };
 
@@ -169,8 +168,7 @@ int getSnakeLength() {
   return count;
 };
 
-int main(int argc, char **arv) {
-
+void initialize() {
   SDL_Init(SDL_INIT_EVERYTHING);
   window = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED_DISPLAY(0),
                             SDL_WINDOWPOS_CENTERED_DISPLAY(0), SCREEN_WIDTH,
@@ -178,10 +176,23 @@ int main(int argc, char **arv) {
   renderer = SDL_CreateRenderer(
       window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 
-  // segment 1
+  // initialize food
+  food.x = SCREEN_WIDTH / 2;
+  food.y = SCREEN_HEIGHT / 2;
+  food.w = PLAYER_SIZE;
+  food.h = PLAYER_SIZE;
+
+  // initialize snake
   snake = malloc(sizeof(Segment));
-  snake->rect = init_head;
+  snake->rect.x = SCREEN_WIDTH - PLAYER_SIZE;
+  snake->rect.y = SCREEN_HEIGHT - PLAYER_SIZE;
+  snake->rect.w = PLAYER_SIZE;
+  snake->rect.h = PLAYER_SIZE;
   snake->next = NULL;
+};
+
+int main(int argc, char **arv) {
+  initialize();
 
   while (isRunning) {
     processInput();
