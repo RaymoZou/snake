@@ -56,7 +56,7 @@ void eatFood() {
   SDL_Rect new_head = food;
   switch (currDirection) {
   case UP:
-    new_head.x -= PLAYER_SIZE;
+    new_head.y -= PLAYER_SIZE;
     break;
   case DOWN:
     new_head.y += PLAYER_SIZE;
