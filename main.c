@@ -136,14 +136,6 @@ void update() {
     break;
   }
 
-  // check for edge collisions
-  if (snake->rect.x < 0 | snake->rect.x >= SCREEN_WIDTH) {
-    restart();
-  };
-  if (snake->rect.y < 0 | snake->rect.y >= SCREEN_HEIGHT) {
-    restart();
-  };
-
   while (curr->next) {
     curr = curr->next;
     SDL_Rect temp = curr->rect;
@@ -154,6 +146,14 @@ void update() {
   // TODO: don't think i need to worry about body collisions?
   if (SDL_HasIntersection(&snake->rect, &food)) {
     eatFood();
+  };
+
+  // check for edge collisions
+  if (snake->rect.x < 0 | snake->rect.x >= SCREEN_WIDTH) {
+    restart();
+  };
+  if (snake->rect.y < 0 | snake->rect.y >= SCREEN_HEIGHT) {
+    restart();
   };
 };
 
