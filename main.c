@@ -19,7 +19,6 @@ typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 // TODO: game restart on collision
 // TODO: score UI using SDL_ttf
 // TODO: reset the food to new unoccupied, random position when collected
-// TODO: figure out why game doesn't reset when snake length > 2
 
 // game state
 typedef struct Segment {
@@ -31,6 +30,15 @@ SDL_Rect food;
 Segment *snake;
 
 Direction currDirection = LEFT;
+
+// change food location
+// TODO: prevent overlap between segments and food
+void spawnFood() {
+  int x = rand() % (SCREEN_WIDTH / PLAYER_SIZE);
+  int y = rand() % (SCREEN_HEIGHT / PLAYER_SIZE);
+  food.x = x * PLAYER_SIZE;
+  food.y = y * PLAYER_SIZE;
+};
 
 void restart() {
   SDL_Log("restarting game...\n");
@@ -72,6 +80,7 @@ void eatFood() {
   };
   new_seg->next = snake->next;
   snake->next = new_seg;
+  spawnFood();
 };
 
 void processInput() {
