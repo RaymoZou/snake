@@ -16,7 +16,6 @@ const int PLAYER_SIZE = 25;
 int isRunning = SDL_TRUE;
 typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
-// TODO: game restart on collision
 // TODO: score UI using SDL_ttf
 // TODO: reset the food to new unoccupied, random position when collected
 
@@ -53,7 +52,6 @@ void restart() {
   snake->rect.y = SCREEN_HEIGHT - PLAYER_SIZE;
   snake->rect.w = PLAYER_SIZE;
   snake->rect.h = PLAYER_SIZE;
-  snake->next = NULL;
   snake->next = NULL;
 };
 
@@ -152,7 +150,7 @@ void update() {
     prev_rect = temp;
   };
 
-  // TODO: don't think i need to worry about body collisions?
+  // check for food collision
   if (SDL_HasIntersection(&snake->rect, &food)) {
     eatFood();
   };
