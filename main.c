@@ -31,7 +31,6 @@ Segment *snake;
 Direction currDirection = LEFT;
 
 // change food location
-// TODO: prevent overlap between segments and food
 void spawnFood() {
   int x = rand() % (SCREEN_WIDTH / PLAYER_SIZE);
   int y = rand() % (SCREEN_HEIGHT / PLAYER_SIZE);
@@ -122,7 +121,6 @@ void render() {
   SDL_RenderPresent(renderer);
 };
 
-// TODO: check for body collisions b/w head and body
 void update() {
   Segment *curr = snake;
   SDL_Rect prev_rect = snake->rect;
@@ -145,6 +143,10 @@ void update() {
 
   while (curr->next) {
     curr = curr->next;
+    if (SDL_HasIntersection(&curr->rect, &snake->rect)) {
+        restart();
+        break;
+    }
     SDL_Rect temp = curr->rect;
     curr->rect = prev_rect;
     prev_rect = temp;
