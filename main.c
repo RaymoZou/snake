@@ -1,22 +1,27 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_log.h>
+#include <SDL2/SDL_pixels.h>
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
+#include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
+#include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
 #include <stdlib.h>
 
 SDL_Window *window;
 SDL_Renderer *renderer;
+TTF_Font *font;
 const int SCREEN_WIDTH = 600;
 const int SCREEN_HEIGHT = 600;
 const int PLAYER_SIZE = 25;
 int isRunning = SDL_TRUE;
+int score = 0;
+char scoreText[20];
 typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
 
-// TODO: score UI using SDL_ttf
 // TODO: reset the food to new unoccupied, random position when collected
 
 // game state
@@ -52,6 +57,7 @@ void restart() {
   snake->rect.w = PLAYER_SIZE;
   snake->rect.h = PLAYER_SIZE;
   snake->next = NULL;
+  score = 0;
 };
 
 // problem: the food and head are on top of eachother
@@ -77,6 +83,7 @@ void eatFood() {
   };
   new_seg->next = snake->next;
   snake->next = new_seg;
+  score++;
   spawnFood();
 };
 
@@ -118,6 +125,14 @@ void render() {
     curr_seg = curr_seg->next;
   }
   SDL_RenderFillRect(renderer, &food);
+
+  // render ui
+  SDL_Color color = {255, 255, 255, SDL_ALPHA_OPAQUE};
+  SDL_Surface *surface = TTF_RenderText_Solid(font, SDL_itoa(score, scoreText, 10), color);
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+  SDL_Rect rect = {0, 0, surface->w, surface->h};
+  SDL_RenderCopy(renderer, texture, &rect, &rect);
+
   SDL_RenderPresent(renderer);
 };
 
@@ -144,8 +159,8 @@ void update() {
   while (curr->next) {
     curr = curr->next;
     if (SDL_HasIntersection(&curr->rect, &snake->rect)) {
-        restart();
-        break;
+      restart();
+      break;
     }
     SDL_Rect temp = curr->rect;
     curr->rect = prev_rect;
@@ -178,6 +193,16 @@ int getSnakeLength() {
 };
 
 void initialize() {
+  // initialize ttf
+  if (TTF_Init() != 0) {
+    SDL_Log("TTF initialization failed: ", TTF_GetError());
+    SDL_Quit();
+  };
+  font = TTF_OpenFont("GroutpixFlow-0vvyP.ttf", 48);
+  if (!font) {
+    SDL_Log("Error loading font: ", TTF_GetError());
+  }
+
   SDL_Init(SDL_INIT_EVERYTHING);
   window = SDL_CreateWindow("Snake Game", SDL_WINDOWPOS_CENTERED_DISPLAY(0),
                             SDL_WINDOWPOS_CENTERED_DISPLAY(0), SCREEN_WIDTH,
