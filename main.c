@@ -10,6 +10,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
 #include <stdlib.h>
+#include <time.h>
 
 SDL_Window *window;
 SDL_Renderer *renderer;
@@ -37,6 +38,7 @@ Direction currDirection = LEFT;
 
 // change food location
 void spawnFood() {
+  srand(time(NULL));
   int x = rand() % (SCREEN_WIDTH / PLAYER_SIZE);
   int y = rand() % (SCREEN_HEIGHT / PLAYER_SIZE);
   food.x = x * PLAYER_SIZE;
@@ -128,7 +130,8 @@ void render() {
 
   // render ui
   SDL_Color color = {255, 255, 255, SDL_ALPHA_OPAQUE};
-  SDL_Surface *surface = TTF_RenderText_Solid(font, SDL_itoa(score, scoreText, 10), color);
+  SDL_Surface *surface =
+      TTF_RenderText_Solid(font, SDL_itoa(score, scoreText, 10), color);
   SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
   SDL_Rect rect = {0, 0, surface->w, surface->h};
   SDL_RenderCopy(renderer, texture, &rect, &rect);
