@@ -112,6 +112,9 @@ void processInput() {
       default:
         break;
       }
+    } else if (event.type == SDL_QUIT) {
+        SDL_Log("Quit message received\n");
+        isRunning = SDL_FALSE;
     };
   };
 }
@@ -243,6 +246,7 @@ int main(int argc, char **arv) {
 
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
+  TTF_Quit();
   SDL_Quit();
   return 0;
 };
