@@ -18,12 +18,12 @@ TTF_Font *font;
 const int SCREEN_WIDTH = 600;
 const int SCREEN_HEIGHT = 600;
 const int PLAYER_SIZE = 25;
+const int numRows = SCREEN_WIDTH / PLAYER_SIZE;
+const int numCols = SCREEN_HEIGHT / PLAYER_SIZE;
 int isRunning = SDL_TRUE;
 int score = 0;
 char scoreText[20];
 typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
-
-// TODO: reset the food to new unoccupied, random position when collected
 
 // game state
 typedef struct Segment {
@@ -36,13 +36,23 @@ Segment *snake;
 
 Direction currDirection = LEFT;
 
-// change food location
+// TODO: handle last edge case - when there
+// are no more locations available
 void spawnFood() {
   srand(time(NULL));
-  int x = rand() % (SCREEN_WIDTH / PLAYER_SIZE);
-  int y = rand() % (SCREEN_HEIGHT / PLAYER_SIZE);
-  food.x = x * PLAYER_SIZE;
-  food.y = y * PLAYER_SIZE;
+  food.x = rand() % (numRows)*PLAYER_SIZE;
+  food.y = rand() % (numCols)*PLAYER_SIZE;
+  Segment *curr = snake;
+  while (curr) {
+    if (!SDL_HasIntersection(&curr->rect, &food)) {
+      break;
+    } else {
+      SDL_Log("intersection detected\n");
+      food.x = rand() % (numRows)*PLAYER_SIZE;
+      food.y = rand() % (numCols)*PLAYER_SIZE;
+    }
+    curr = curr->next;
+  };
 };
 
 void restart() {
@@ -113,8 +123,8 @@ void processInput() {
         break;
       }
     } else if (event.type == SDL_QUIT) {
-        SDL_Log("Quit message received\n");
-        isRunning = SDL_FALSE;
+      SDL_Log("Quit message received\n");
+      isRunning = SDL_FALSE;
     };
   };
 }
