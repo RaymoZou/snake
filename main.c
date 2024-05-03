@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_blendmode.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_log.h>
 #include <SDL2/SDL_pixels.h>
@@ -18,8 +19,10 @@ TTF_Font *font;
 const int SCREEN_WIDTH = 600;
 const int SCREEN_HEIGHT = 600;
 const int PLAYER_SIZE = 25;
-const int numRows = SCREEN_WIDTH / PLAYER_SIZE;
-const int numCols = SCREEN_HEIGHT / PLAYER_SIZE;
+const int MAX_OPACITY = SDL_ALPHA_OPAQUE;
+const int MIN_OPACITY = 20;
+const int NUM_ROWS = SCREEN_WIDTH / PLAYER_SIZE;
+const int NUM_COLS = SCREEN_HEIGHT / PLAYER_SIZE;
 int isRunning = SDL_TRUE;
 int score = 0;
 char scoreText[20];
@@ -40,16 +43,16 @@ Direction currDirection = LEFT;
 // are no more locations available
 void spawnFood() {
   srand(time(NULL));
-  food.x = rand() % (numRows)*PLAYER_SIZE;
-  food.y = rand() % (numCols)*PLAYER_SIZE;
+  food.x = rand() % (NUM_ROWS)*PLAYER_SIZE;
+  food.y = rand() % (NUM_COLS)*PLAYER_SIZE;
   Segment *curr = snake;
   while (curr) {
     if (!SDL_HasIntersection(&curr->rect, &food)) {
       break;
     } else {
       SDL_Log("intersection detected\n");
-      food.x = rand() % (numRows)*PLAYER_SIZE;
-      food.y = rand() % (numCols)*PLAYER_SIZE;
+      food.x = rand() % (NUM_ROWS)*PLAYER_SIZE;
+      food.y = rand() % (NUM_COLS)*PLAYER_SIZE;
     }
     curr = curr->next;
   };
@@ -129,16 +132,33 @@ void processInput() {
   };
 }
 
+int getSnakeLength() {
+  int count = 0;
+  Segment *curr = snake;
+  while (curr) {
+    SDL_Log("Segment %d x: %d, y: %d\n", count, curr->rect.x, curr->rect.y);
+    count++;
+    curr = curr->next;
+  };
+  return count;
+};
+
 // render the player and the food
 void render() {
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   Segment *curr_seg = snake;
+  int curr_opacity = MAX_OPACITY;
+  int decrement = MAX_OPACITY / getSnakeLength();
   while (curr_seg) {
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, curr_opacity);
     SDL_RenderFillRect(renderer, &curr_seg->rect);
     curr_seg = curr_seg->next;
+    curr_opacity -= decrement;
   }
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+  SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
   SDL_RenderFillRect(renderer, &food);
 
   // render ui
@@ -195,17 +215,6 @@ void update() {
   if (snake->rect.y < 0 | snake->rect.y >= SCREEN_HEIGHT) {
     restart();
   };
-};
-
-int getSnakeLength() {
-  int count = 0;
-  Segment *curr = snake;
-  while (curr) {
-    SDL_Log("Segment %d x: %d, y: %d\n", count, curr->rect.x, curr->rect.y);
-    count++;
-    curr = curr->next;
-  };
-  return count;
 };
 
 void initialize() {
