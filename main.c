@@ -19,14 +19,13 @@ TTF_Font *font;
 const int SCREEN_WIDTH = 600;
 const int SCREEN_HEIGHT = 600;
 const int PLAYER_SIZE = 25;
-const int MAX_OPACITY = SDL_ALPHA_OPAQUE;
 const int MIN_OPACITY = 20;
 const int NUM_ROWS = SCREEN_WIDTH / PLAYER_SIZE;
 const int NUM_COLS = SCREEN_HEIGHT / PLAYER_SIZE;
 int isRunning = SDL_TRUE;
 int score = 0;
 char scoreText[20];
-typedef enum Direction { UP, DOWN, LEFT, RIGHT } Direction;
+typedef enum Direction { NONE, UP, DOWN, LEFT, RIGHT } Direction;
 
 // game state
 typedef struct Segment {
@@ -37,7 +36,7 @@ typedef struct Segment {
 SDL_Rect food;
 Segment *snake;
 
-Direction currDirection = LEFT;
+Direction currDirection = NONE;
 
 // TODO: handle last edge case - when there
 // are no more locations available
@@ -73,6 +72,7 @@ void restart() {
   snake->rect.h = PLAYER_SIZE;
   snake->next = NULL;
   score = 0;
+  currDirection = NONE;
 };
 
 // problem: the food and head are on top of eachother
@@ -92,6 +92,9 @@ void eatFood() {
     break;
   case RIGHT:
     new_head.x += PLAYER_SIZE;
+    break;
+  case NONE:
+    // do nothing
     break;
   default:
     break;
@@ -149,8 +152,8 @@ void render() {
   SDL_RenderClear(renderer);
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   Segment *curr_seg = snake;
-  int curr_opacity = MAX_OPACITY;
-  int decrement = MAX_OPACITY / getSnakeLength();
+  int curr_opacity = SDL_ALPHA_OPAQUE;
+  int decrement = SDL_ALPHA_OPAQUE / getSnakeLength();
   while (curr_seg) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, curr_opacity);
     SDL_RenderFillRect(renderer, &curr_seg->rect);
