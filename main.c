@@ -212,10 +212,7 @@ void update() {
   };
 
   // check for edge collisions
-  if (snake->rect.x < 0 | snake->rect.x >= SCREEN_WIDTH) {
-    restart();
-  };
-  if (snake->rect.y < 0 | snake->rect.y >= SCREEN_HEIGHT) {
+  if (snake->rect.x < 0 | snake->rect.x >= SCREEN_WIDTH | snake->rect.y < 0 | snake->rect.y >= SCREEN_HEIGHT) {
     restart();
   };
 };
