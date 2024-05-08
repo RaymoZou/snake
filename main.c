@@ -38,23 +38,24 @@ Segment *snake;
 
 Direction currDirection = NONE;
 
+// returns true if there is any segment that is intersecting with the food
+SDL_bool IsOverlapping(SDL_Rect *food, Segment *curr) {
+  while (curr) {
+    if (SDL_HasIntersection(food, &curr->rect)) {
+      return SDL_TRUE;
+    };
+    curr = curr->next;
+  }
+  return SDL_FALSE;
+};
+
 // TODO: handle last edge case - when there
 // are no more locations available
 void spawnFood() {
-  srand(time(NULL));
-  food.x = rand() % (NUM_ROWS)*PLAYER_SIZE;
-  food.y = rand() % (NUM_COLS)*PLAYER_SIZE;
-  Segment *curr = snake;
-  while (curr) {
-    if (!SDL_HasIntersection(&curr->rect, &food)) {
-      break;
-    } else {
-      SDL_Log("intersection detected\n");
-      food.x = rand() % (NUM_ROWS)*PLAYER_SIZE;
-      food.y = rand() % (NUM_COLS)*PLAYER_SIZE;
-    }
-    curr = curr->next;
-  };
+  do {
+    food.x = rand() % (NUM_ROWS)*PLAYER_SIZE;
+    food.y = rand() % (NUM_COLS)*PLAYER_SIZE;
+  } while (IsOverlapping(&food, snake));
 };
 
 void restart() {
@@ -212,12 +213,15 @@ void update() {
   };
 
   // check for edge collisions
-  if (snake->rect.x < 0 | snake->rect.x >= SCREEN_WIDTH | snake->rect.y < 0 | snake->rect.y >= SCREEN_HEIGHT) {
+  if (snake->rect.x < 0 | snake->rect.x >= SCREEN_WIDTH | snake->rect.y < 0 |
+      snake->rect.y >= SCREEN_HEIGHT) {
     restart();
   };
 };
 
 void initialize() {
+  // seed randomness with time
+  srand(time(NULL));
   // initialize ttf
   if (TTF_Init() != 0) {
     SDL_Log("TTF initialization failed: ", TTF_GetError());
