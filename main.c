@@ -22,6 +22,7 @@ const int PLAYER_SIZE = 25;
 const int MIN_OPACITY = 20;
 const int NUM_ROWS = SCREEN_WIDTH / PLAYER_SIZE;
 const int NUM_COLS = SCREEN_HEIGHT / PLAYER_SIZE;
+const int FONT_SIZE = 72;
 int isRunning = SDL_TRUE;
 int score = 0;
 char scoreText[20];
@@ -227,7 +228,7 @@ void initialize() {
     SDL_Log("TTF initialization failed: ", TTF_GetError());
     SDL_Quit();
   };
-  font = TTF_OpenFont("GroutpixFlow-0vvyP.ttf", 48);
+  font = TTF_OpenFont("GroutpixFlow-0vvyP.ttf", FONT_SIZE);
   if (!font) {
     SDL_Log("Error loading font: ", TTF_GetError());
   }
