@@ -8,6 +8,7 @@ Classic game of snake created using SDL2.
 ## Installation (Arch Linux):
 1. Install SDL2 development packages with `sudo pacman -S sdl2 sdl2_ttf`.
 2. Compile using the given `Makefile`.
+3. Run with `./main.exe`.
 
 ## Resources:
 - The font used to display the score can be found [here](https://ffeeaarr.my.id/b/9x6BC)
