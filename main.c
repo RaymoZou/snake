@@ -16,8 +16,8 @@
 SDL_Window *window;
 SDL_Renderer *renderer;
 TTF_Font *font;
-const int SCREEN_WIDTH = 600;
-const int SCREEN_HEIGHT = 600;
+const int SCREEN_WIDTH = 1200;
+const int SCREEN_HEIGHT = 800;
 const int PLAYER_SIZE = 25;
 const int MIN_OPACITY = 20;
 const int NUM_ROWS = SCREEN_WIDTH / PLAYER_SIZE;
@@ -59,14 +59,17 @@ void spawnFood() {
   } while (IsOverlapping(&food, snake));
 };
 
-void restart() {
-  SDL_Log("restarting game...\n");
+void free_segment(Segment *segment) {
   Segment *temp;
   while (snake) {
     temp = snake;
     snake = snake->next;
     free(temp);
   };
+}
+
+void restart() {
+  free_segment(snake);
   snake = malloc(sizeof(Segment));
   snake->rect.x = SCREEN_WIDTH - PLAYER_SIZE;
   snake->rect.y = SCREEN_HEIGHT - PLAYER_SIZE;
