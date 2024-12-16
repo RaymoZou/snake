@@ -23,12 +23,23 @@ const int MIN_OPACITY = 20;
 const int NUM_ROWS = SCREEN_WIDTH / PLAYER_SIZE;
 const int NUM_COLS = SCREEN_HEIGHT / PLAYER_SIZE;
 const int FONT_SIZE = 72;
+const SDL_Color SNAKE_COLOR = {255, 255, 255,
+                               SDL_ALPHA_OPAQUE}; // color of snake body
+const SDL_Color FOOD_COLOR = {255, 255, 255,
+                              SDL_ALPHA_OPAQUE}; // color of the food
+const SDL_Color SCORE_COLOR = {255, 255, 255,
+                               SDL_ALPHA_OPAQUE}; // color of the score text
+const SDL_Color CLEAR_COLOR = {
+    0, 0, 0, SDL_ALPHA_OPAQUE}; // color used for SDL_RenderClear - essentially
+                                // the background color
 int isRunning = SDL_TRUE;
 int score = 0;
 char scoreText[20];
 typedef enum Direction { NONE, UP, DOWN, LEFT, RIGHT } Direction;
 
 // game state
+
+// a segment is a linked list
 typedef struct Segment {
   SDL_Rect rect;
   struct Segment *next;
@@ -153,26 +164,27 @@ int getSnakeLength() {
 
 // render the player and the food
 void render() {
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+  SDL_SetRenderDrawColor(renderer, CLEAR_COLOR.r, CLEAR_COLOR.g, CLEAR_COLOR.b, CLEAR_COLOR.a);
   SDL_RenderClear(renderer);
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   Segment *curr_seg = snake;
   int curr_opacity = SDL_ALPHA_OPAQUE;
   int decrement = SDL_ALPHA_OPAQUE / getSnakeLength();
   while (curr_seg) {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, curr_opacity);
+    SDL_SetRenderDrawColor(renderer, SNAKE_COLOR.r, SNAKE_COLOR.g,
+                           SNAKE_COLOR.b, curr_opacity);
     SDL_RenderFillRect(renderer, &curr_seg->rect);
     curr_seg = curr_seg->next;
     curr_opacity -= decrement;
   }
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+  SDL_SetRenderDrawColor(renderer, SNAKE_COLOR.r, SNAKE_COLOR.g, SNAKE_COLOR.b,
+                         SNAKE_COLOR.a);
   SDL_RenderFillRect(renderer, &food);
 
   // render ui
-  SDL_Color color = {255, 255, 255, SDL_ALPHA_OPAQUE};
   SDL_Surface *surface =
-      TTF_RenderText_Solid(font, SDL_itoa(score, scoreText, 10), color);
+      TTF_RenderText_Solid(font, SDL_itoa(score, scoreText, 10), SNAKE_COLOR);
   SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
   SDL_Rect rect = {0, 0, surface->w, surface->h};
   SDL_RenderCopy(renderer, texture, &rect, &rect);
@@ -266,7 +278,7 @@ int main(int argc, char **arv) {
     update();
     render();
 
-    SDL_Delay(1000 / 8);
+    SDL_Delay(1000 / 8); // in milliseconds
 
     getSnakeLength();
   };
